@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    justify-content: center; /* Center items vertically (if content is less than viewport height) */
+    margin-top: 20px;
+    background-color: #f0f0f0;
+}
+
+#game-container {
+    background-color: #c0c0c0; /* Light grey background for the game area */
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.2); /* Add a subtle shadow */
+}
+
+h1 { /* For the main game title */
+    color: #333;
+}
+
+h2 { /* For the score */
+    color: #555;
+    margin-bottom: 15px;
+}

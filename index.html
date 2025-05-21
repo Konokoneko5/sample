@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Python Snake Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body onload="brython()">
+  <h1>Python Snake Game</h1>
+  <div id="game-container"></div>
+  <script type="text/python" id="game-script">
+import random
+from browser import document, html, timer, window, alert
+
+# Global Variables / Game State
+game_area_width = 20  # In grid units
+game_area_height = 20 # In grid units
+segment_pixel_size = 10 # Pixel size for each segment and grid unit
+snake_body = []
+snake_direction = (1, 0)  # Initial direction: Right
+food_pos = (0, 0)
+score = 0
+game_over = False
+current_direction_key = 'ArrowRight'
+
+# DOM Elements
+game_container = document["game-container"]
+score_display = html.H2() # Create an H2 element for the score
+game_container.parent.insertBefore(score_display, game_container) # Insert score display before game container
+
+# Style game container
+game_container.style = {
+    "width": f"{game_area_width * segment_pixel_size}px",
+    "height": f"{game_area_height * segment_pixel_size}px",
+    # "border": "1px solid black", # Border is now handled by CSS
+    "position": "relative", # Important for absolute positioning of children
+    "overflow": "hidden" # Hide parts of segments if they go outside (though wall collision should prevent this)
+}
+
+# Helper Functions
+def random_position():
+  """Returns a random (x, y) tuple within game_area_width and game_area_height."""
+  return (random.randint(0, game_area_width - 1), random.randint(0, game_area_height - 1))
+
+# Rendering Function
+def render_game():
+  """Clears the game_container and redraws the snake, food, and score."""
+  global game_container, snake_body, food_pos, score, game_over
+
+  game_container.clear() # Clear previous frame
+
+  # Render Snake
+  for x, y in snake_body:
+    segment_div = html.DIV()
+    segment_div.style = {
+        "position": "absolute",
+        "left": f"{x * segment_pixel_size}px",
+        "top": f"{y * segment_pixel_size}px",
+        "width": f"{segment_pixel_size}px",
+        "height": f"{segment_pixel_size}px",
+        "backgroundColor": "green"
+    }
+    game_container <= segment_div
+
+  # Render Food
+  food_div = html.DIV()
+  food_div.style = {
+      "position": "absolute",
+      "left": f"{food_pos[0] * segment_pixel_size}px",
+      "top": f"{food_pos[1] * segment_pixel_size}px",
+      "width": f"{segment_pixel_size}px",
+      "height": f"{segment_pixel_size}px",
+      "backgroundColor": "red"
+  }
+  game_container <= food_div
+
+  # Display Score
+  score_display.text = f"Score: {score}"
+
+  # Game Over Message (if applicable)
+  if game_over:
+    # Using an alert for simplicity, could also draw text on the canvas or overlay a div
+    # alert(f"Game Over! Final Score: {score}")
+    # Display game over message in the game container itself
+    game_over_text = html.DIV("Game Over! Final Score: " + str(score), 
+                              style={"position": "absolute", 
+                                     "top": "50%", 
+                                     "left": "50%", 
+                                     "transform": "translate(-50%, -50%)", 
+                                     "color": "black", 
+                                     "fontSize": "20px",
+                                     "backgroundColor": "rgba(255, 255, 255, 0.7)"})
+    game_container <= game_over_text
+
+
+# Initialization Function
+def init_game():
+  """Initializes the game state and starts the game loop."""
+  global snake_body, snake_direction, score, game_over, current_direction_key
+  snake_body = [(5, 5), (4, 5), (3, 5)] # Head at (5,5)
+  snake_direction = (1, 0) # Moving right
+  place_food()
+  score = 0
+  game_over = False
+  current_direction_key = 'ArrowRight'
+  
+  print('Game initialized!') # For debugging
+  render_game() # Initial render
+  timer.set_timeout(game_loop_tick, 150) # Start the game loop
+
+# Food Placement Function
+def place_food():
+  """Sets food_pos to a random_position() ensuring it's not on the snake's body."""
+  global food_pos
+  while True:
+    new_food_pos = random_position()
+    if new_food_pos not in snake_body:
+      food_pos = new_food_pos
+      return
+
+# Movement and Game Update Function
+def update_game_state():
+  """Updates the game state, moves the snake, and checks for collisions."""
+  global game_over, snake_body, score, food_pos, snake_direction
+
+  if game_over:
+    return
+
+  # Calculate new head position
+  head_x, head_y = snake_body[0]
+  dir_x, dir_y = snake_direction
+  new_head_pos = (head_x + dir_x, head_y + dir_y)
+
+  # Wall Collision
+  if not (0 <= new_head_pos[0] < game_area_width and 0 <= new_head_pos[1] < game_area_height):
+    game_over = True
+    print('Game Over: Wall Collision') # For debugging
+    return
+
+  # Self Collision
+  if new_head_pos in snake_body:
+    game_over = True
+    print('Game Over: Self Collision') # For debugging
+    return
+
+  # Add the new head
+  snake_body.insert(0, new_head_pos)
+
+  # Food Eating
+  if new_head_pos == food_pos:
+    score += 1
+    print(f'Score: {score}') # For debugging
+    place_food()
+  else:
+    # Remove the last segment of snake_body (to make it move)
+    snake_body.pop()
+
+# Direction Change Functions
+def change_direction(key_input): # Renamed parameter to avoid conflict
+  """Updates snake_direction based on the key, preventing direct reversal."""
+  global snake_direction, current_direction_key
+
+  # Map Brython event.key to simple names if needed, or use directly
+  # For arrow keys, event.key is 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'
+  if key_input == 'ArrowUp' and current_direction_key != 'ArrowDown':
+    snake_direction = (0, -1)
+    current_direction_key = 'ArrowUp'
+  elif key_input == 'ArrowDown' and current_direction_key != 'ArrowUp':
+    snake_direction = (0, 1)
+    current_direction_key = 'ArrowDown'
+  elif key_input == 'ArrowLeft' and current_direction_key != 'ArrowRight':
+    snake_direction = (-1, 0)
+    current_direction_key = 'ArrowLeft'
+  elif key_input == 'ArrowRight' and current_direction_key != 'ArrowLeft':
+    snake_direction = (1, 0)
+    current_direction_key = 'ArrowRight'
+  # print(f'Direction changed to: {current_direction_key} by key: {key_input}') # For debugging
+
+# Keyboard Input Handling
+def handle_keydown(event):
+  """Handles keydown events for controlling the snake."""
+  # print(f"Key pressed: {event.key}") # For debugging
+  change_direction(event.key)
+  # Prevent default browser action for arrow keys (scrolling)
+  if event.key in ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']:
+    event.preventDefault()
+
+document.bind("keydown", handle_keydown)
+
+# Game Loop Function
+def game_loop_tick():
+  """Main game loop tick: updates state, renders, and schedules next tick."""
+  if not game_over:
+    update_game_state()
+    render_game()
+    timer.set_timeout(game_loop_tick, 150) # Adjust speed as needed
+  else:
+    render_game() # Render one last time to show game over message
+    print("Game loop stopped.") # For debugging
+
+# Initial call to set up the game
+init_game()
+print('Brython initialized and game script fully loaded and running!')
+  </script>
+</body>
+</html>
