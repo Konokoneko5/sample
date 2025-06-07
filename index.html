@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>音当てゲーム</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #staff {
+      position: relative;
+      width: 480px;
+      height: 120px;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+    }
+    #staff .line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: #000;
+    }
+    /* 五線 */
+    #staff .line:nth-child(1) { top: 0px; }
+    #staff .line:nth-child(2) { top: 20px; }
+    #staff .line:nth-child(3) { top: 40px; }
+    #staff .line:nth-child(4) { top: 60px; }
+    #staff .line:nth-child(5) { top: 80px; }
+    .note {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+    }
+    #score { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>音当てゲーム</h1>
+  <button id="start">スタート</button>
+  <div id="staff">
+    <div class="line"></div>
+    <div class="line"></div>
+    <div class="line"></div>
+    <div class="line"></div>
+    <div class="line"></div>
+  </div>
+  <div id="score">得点: 0</div>
+  <script src="game.js"></script>
+</body>
+</html>
+
